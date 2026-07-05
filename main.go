@@ -5,28 +5,35 @@ import (
 	"net/http"
 )
 
+var taskList = []string{}
+
 func main() {
-	http.HandleFunc("/greet", greetUser)
-	http.HandleFunc("/", showForm)
+	http.HandleFunc("/add", addToList)
+	http.HandleFunc("/", showList)
 	http.ListenAndServe(":8080", nil)
 }
 
-func showForm(writer http.ResponseWriter, request *http.Request) {
+func addToList(writer http.ResponseWriter, request *http.Request) {
+	task := request.URL.Query().Get("task")
+	taskList = append(taskList, task)
+
+	http.Redirect(writer, request, "/", http.StatusSeeOther)
+}
+
+func showList(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "text/html")
+
+	listItems := ""
+	for _, task := range taskList {
+		listItems += "<li>" + task + "</li>"
+	}
+
 	html := `
-		<form action="/greet" method="GET">
-			<input type="text" name="name" placeholder="Enter your name">
-			<button type="submit">Greet me</button>
+		<form action="/add" method="GET">
+			<input type="text" name="task" placeholder="Enter a task">
+			<button type="submit">Add task</button>
 		</form>
+		<ul>` + listItems + `</ul>
 	`
 	fmt.Fprintln(writer, html)
-}
-func greetUser(writer http.ResponseWriter, request *http.Request) {
-	name := request.URL.Query().Get("name")
-
-	if name == "" {
-		name = "User"
-	}
-	var greeting = "Hello " + name + "!"
-	fmt.Fprintln(writer, greeting)
 }
