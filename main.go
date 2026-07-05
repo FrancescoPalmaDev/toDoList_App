@@ -11,6 +11,11 @@ func main() {
 }
 
 func greetUser(writer http.ResponseWriter, request *http.Request) {
-	var greeting = "Hello User!"
+	name := request.URL.Query().Get("name")
+
+	if name == "" {
+		name = "User"
+	}
+	var greeting = "Hello " + name + "!"
 	fmt.Fprintln(writer, greeting)
 }
