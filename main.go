@@ -3,14 +3,23 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 )
 
 var taskList = []string{}
 
 func main() {
 	http.HandleFunc("/add", addToList)
+	http.HandleFunc("/remove", removeFromList)
 	http.HandleFunc("/", showList)
 	http.ListenAndServe(":8080", nil)
+}
+
+func removeFromList(writer http.ResponseWriter, request *http.Request) {
+	indexStr := request.URL.Query().Get("index")
+	index, _ := strconv.Atoi(indexStr)
+	taskList = append(taskList[:index], taskList[index+1:]...)
+	http.Redirect(writer, request, "/", http.StatusSeeOther)
 }
 
 func addToList(writer http.ResponseWriter, request *http.Request) {
@@ -24,8 +33,8 @@ func showList(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "text/html")
 
 	listItems := ""
-	for _, task := range taskList {
-		listItems += "<li>" + task + "</li>"
+	for i, task := range taskList {
+		listItems += "<li>" + task + " <a href='/remove?index=" + fmt.Sprintf("%d", i) + "'>Done</a></li>"
 	}
 
 	html := `
